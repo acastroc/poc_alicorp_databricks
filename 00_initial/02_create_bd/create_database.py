@@ -24,4 +24,10 @@
 # COMMAND ----------
 
 # MAGIC  %sql
+# MAGIC  DROP DATABASE IF EXISTS landing CASCADE;
 # MAGIC create database IF not EXISTS landing ;
+
+# COMMAND ----------
+
+# MAGIC  %sql
+# MAGIC create database IF not EXISTS staging ;
