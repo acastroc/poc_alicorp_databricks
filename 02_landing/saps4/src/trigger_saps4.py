@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %run ../../../utils/utils
+# MAGIC %run ../../../01_utils/utils
 
 # COMMAND ----------
 
@@ -50,6 +50,7 @@ for table_landing in list_table :
                      't_day':t_day
         }
         #se graba el df en formato delta en el storage
+        #logger.info(f'{parameter}')
         process= save_df_schedule(parameter)
         logger.info(f'{process}')
         

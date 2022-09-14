@@ -20,7 +20,7 @@ json_file = '''
                    },
           "reprocess": {
                      "active":"S",
-                     "days":"10"
+                     "days":"2"
                      },
          "schedule": {
                      "format":"month",
@@ -60,3 +60,4 @@ def conf_json_order ():
     list_table = json.loads(json_file)
     return list_table
 
+print("****** config Git *********")

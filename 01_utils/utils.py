@@ -280,10 +280,6 @@ class Email:
 # print(email_from,email_pass)
 
 
-  
-    
-#def validateDate(df:DataFrame)->DataFrame:
-
 def read_yaml(bucket:str,file:str)-> yml:
     """
     Definición :  
@@ -316,62 +312,7 @@ def read_yaml(bucket:str,file:str)-> yml:
     downloaded_file = blob.download_as_string()
     downloaded_yaml_file = yml.safe_load(blob.download_as_text(encoding="utf-8"))
     return downloaded_yaml_file 
-  
-
-######## funcion save datos delta
-def save_df (file_location_csv:str,name_file:str,partition:str,path_delta:str) ->str:
-    """ 
-    Definición :  
-        Metodo que retonar el maximo valor del archivo que se encuentra en el storage
-    Parámetros:
-        str1 (str): ruta donde buscara la maxima fecha
-    Resultado:
-        dict : diccionario con nombre,fecha en date y string
-    """
-    
-    now = datetime.now()
-    date_current = now - timedelta(hours=5)
-    day = '{:02d}'.format(date_current.day)
-    
-    # valor inicial de busqueda
-    file_type = 'csv'
-    infer_schema = 'false'
-    first_row_is_header = 'true'
-    delimiter = ','
-    v_current = date_process('yyyymmddhhmmss')
-    
-    df = spark.read.format(file_type) \
-        .option("inferSchema", infer_schema) \
-        .option("multiline", "true") \
-        .option("encoding", "utf8") \
-        .option("header", first_row_is_header) \
-        .option("sep", delimiter) \
-        .load(file_location_csv)
-
-    df = df \
-        .withColumn('CREATE_AT', f.unix_timestamp(f.lit(v_current), 'yyyy-MM-dd HH:mm:ss').cast("timestamp")) \
-        .withColumn('ORIGIN_FILE', f.lit(name_file))
-    
-    if partition == 'm':
-        df = df.withColumn('YEAR_MONTH', f.lit(name_file[0:6]))
-    else:
-        df = df.withColumn('YEAR_MONTH_DAY', f.lit(name_file[0:8]))
-       
-    for each in df.columns:
-        df = df.withColumnRenamed(each , each.strip())
-        
-    if ((partition == 'm') and ( day=='01' or day=='15' or day=='28' or day=='09' ) ):
-        proceso = 'tabla mensual'
-        df.write.mode('append').format('delta').save(path_delta)
-    elif ((partition == 'd'))  :
-        proceso = 'tabla diaria'
-        df.write.mode('append').format('delta').save(path_delta)
-    else :
-        proceso = 'sin registrar'
-  
-    return proceso
-    
-    
+     
 ######## funcion save datos delta
 def save_df_schedule (parameter:json) ->str:
     """ 
@@ -440,8 +381,6 @@ def save_df_schedule (parameter:json) ->str:
         proceso = 'sin registrar'
   
     return proceso
-
-
 
 print("****** Version Git *********")
 

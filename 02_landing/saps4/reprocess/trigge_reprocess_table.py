@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %run ../../../utils/utils
+# MAGIC %run ../../../01_utils/utils
 
 # COMMAND ----------
 
@@ -20,8 +20,8 @@ for table_landing in list_table :
     t_table= table_landing['table']['name'].lower()
     t_partition= table_landing['table']['partition_field'].lower()
     
-    t_reproceso= table_landing['reproces']['active'].lower()
-    t_dias= table_landing['reproces']['days'].lower()
+    t_reproceso= table_landing['reprocess']['active'].lower()
+    t_dias= table_landing['reprocess']['days'].lower()
     
     if t_reproceso =='s' :
         logger.info(f'Procesando tabla: {t_table} - partición : {t_partition} - reproceso : {t_reproceso} - dias_reproceso : {t_dias}')
@@ -46,26 +46,27 @@ for table_landing in list_table :
                 v_month = new_date.strftime("%m")
                 # obtiene el día
                 v_day = new_date.strftime("%d")
+                
+                
                 v_name_file = f'{v_year}{v_month}{v_day}.csv'  
-                file_location_csv = f'{mount}/{raw}/{t_table}/data/{v_name_file}'
-        
-                logger.info(v_file_location)
+                file_location_csv = f'{mount}/{raw}/{t_table}/data/{v_year}/{v_name_file}'
+                
+                
+                logger.info(file_location_csv)
+                
                 parameter ={ 'file_location_csv':file_location_csv,
                      'name_file':v_name_file,
                      't_partition':t_partition,
                      't_location_delta':t_location_delta,
                      't_format':'reproces',
-                     't_day':t_day
+                     't_day':t_dias
                 }
+                
+                #logger.info(f'{parameter}')
                 #se graba el df en formato delta en el storage
                 process= save_df_schedule(parameter)
-                logger.info(f'{process}')
+                #logger.info(f'{process}')
         
             except Exception as e:
                 #Email("la capa Bronze de Customers_Hierarchy", str(e))
-                logger.info(f'Error : {t_table}')
-
-            
-        
-      
-    
+                logger.info(f'Error : {t_table}')    
