@@ -1,0 +1,25 @@
+# Databricks notebook source
+# MAGIC %sql
+# MAGIC drop table if exists bronze.ztotc_costprec ;
+# MAGIC create table bronze.ztotc_costprec
+# MAGIC 
+# MAGIC (
+# MAGIC MANDT STRING,
+# MAGIC MES STRING,
+# MAGIC SEMANA STRING,
+# MAGIC VKORG STRING,
+# MAGIC OF_R3 STRING,
+# MAGIC CANAL_R3 STRING,
+# MAGIC SKU STRING,
+# MAGIC PREC_PLAN STRING,
+# MAGIC PREC_REAL STRING,
+# MAGIC COST_PLAN STRING,
+# MAGIC COST_REAL STRING,
+# MAGIC 
+# MAGIC CREATE_AT TIMESTAMP,
+# MAGIC YEAR_MONTH_DAY STRING,
+# MAGIC ORIGIN_FILE STRING
+# MAGIC )
+# MAGIC using delta
+# MAGIC partitioned by (YEAR_MONTH_DAY)
+# MAGIC LOCATION '/mnt/data_s4/bronze/ztotc_costprec'

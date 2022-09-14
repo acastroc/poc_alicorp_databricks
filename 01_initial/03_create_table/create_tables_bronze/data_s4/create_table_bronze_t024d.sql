@@ -1,0 +1,24 @@
+-- Databricks notebook source
+-- MAGIC %sql
+-- MAGIC drop table if exists bronze.t024d ;
+-- MAGIC create table bronze.t024d
+-- MAGIC (
+-- MAGIC mandt string ,
+-- MAGIC werks string ,
+-- MAGIC dispo string ,
+-- MAGIC dsnam string ,
+-- MAGIC dstel string ,
+-- MAGIC ekgrp string ,
+-- MAGIC mempf string ,
+-- MAGIC gsber string ,
+-- MAGIC prctr string ,
+-- MAGIC usrtyp string ,
+-- MAGIC usrkey string ,
+-- MAGIC create_at timestamp ,
+-- MAGIC origin_file string ,
+-- MAGIC year_month_day string 
+-- MAGIC )
+-- MAGIC using delta
+-- MAGIC partitioned by (YEAR_MONTH_DAY)
+-- MAGIC LOCATION '/mnt/data_s4/bronze/t024d'
+-- MAGIC     
