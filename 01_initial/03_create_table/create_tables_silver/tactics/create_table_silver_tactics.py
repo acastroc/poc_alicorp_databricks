@@ -1,0 +1,53 @@
+# Databricks notebook source
+# MAGIC %sql
+# MAGIC drop table if exists silver.tactics ;
+# MAGIC create table silver.tactics
+# MAGIC (
+# MAGIC CLIENT STRING
+# MAGIC ,TACTIC_TYPE STRING
+# MAGIC ,TACTIC STRING
+# MAGIC ,TACTIC_DESC STRING
+# MAGIC ,TACTIC_SHORT_DES STRING
+# MAGIC ,TACT_GROUP_TYPE INT
+# MAGIC ,TACTIC_TYPE_DESC STRING
+# MAGIC ,TACTIC_TYPE_S_DE STRING
+# MAGIC ,CREATE_AT timestamp
+# MAGIC ,YEAR_MONTH_DAY string
+# MAGIC ,ORIGIN_FILE string
+# MAGIC )
+# MAGIC using delta
+# MAGIC partitioned by (YEAR_MONTH_DAY)
+# MAGIC LOCATION '/mnt/data_bwtpm/silver/tactics'
+
+# COMMAND ----------
+
+#%sql
+#drop table if exists silver.tactics ;
+#create table silver.tactics
+#(
+#CRM_MKTELM STRING
+#,CRM_TACTIC STRING
+#,CRM_OBJEC4 STRING
+#,CRM_PLGRP STRING
+#,CRMCAMPTYP STRING
+#,BUY_DATF STRING
+#,BUY_DATT STRING
+#,STAMKTSYS0 STRING
+#,STAMKTSYS1 STRING
+#,STAMKTSYS2 STRING
+#,STAMKTSYS3 STRING
+#,BP_GRP_SRC STRING
+#,CUSTOMER STRING
+#,BPARTNER STRING
+#,CRM_SALORG STRING
+#,DISTR_CHAN STRING
+#,DIVISION STRING
+#,TXTLG STRING
+#,CREATE_AT timestamp
+#,YEAR_MONTH_DAY string
+#,ORIGIN_FILE string
+#)
+#using delta
+#partitioned by (YEAR_MONTH_DAY)
+#LOCATION '/mnt/data_bwtpm/silver/tactics'
+    

@@ -1,0 +1,17 @@
+-- Databricks notebook source
+-- MAGIC %sql
+-- MAGIC drop table if exists datagov.historia_observados_calidad;
+-- MAGIC create table datagov.historia_observados_calidad 
+-- MAGIC (
+-- MAGIC  fecha date,
+-- MAGIC  fecha_anterior date,
+-- MAGIC  id_control string,
+-- MAGIC  total_observados int,
+-- MAGIC  nuevos_observados int,
+-- MAGIC  mismos_observados int,
+-- MAGIC  observados_corregidos int
+-- MAGIC )
+-- MAGIC using delta
+-- MAGIC partitioned by (fecha)
+-- MAGIC 
+-- MAGIC LOCATION '/mnt/data_governance/calidad-de-datos/data/historia_observados_calidad'

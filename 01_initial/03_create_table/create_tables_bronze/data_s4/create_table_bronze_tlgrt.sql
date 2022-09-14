@@ -1,0 +1,17 @@
+-- Databricks notebook source
+-- MAGIC %sql
+-- MAGIC drop table if exists bronze.tlgrt ;
+-- MAGIC create table bronze.tlgrt
+-- MAGIC (
+-- MAGIC mandt string ,
+-- MAGIC spras string ,
+-- MAGIC ladgr string ,
+-- MAGIC vtext string ,
+-- MAGIC create_at timestamp ,
+-- MAGIC origin_file string ,
+-- MAGIC year_month_day string
+-- MAGIC )
+-- MAGIC using delta
+-- MAGIC partitioned by (YEAR_MONTH_DAY)
+-- MAGIC LOCATION '/mnt/data_s4/bronze/tlgrt'
+-- MAGIC     

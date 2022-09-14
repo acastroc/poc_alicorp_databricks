@@ -1,0 +1,27 @@
+-- Databricks notebook source
+-- MAGIC %sql
+-- MAGIC drop table if exists bronze.cdhdr ;
+-- MAGIC create table bronze.cdhdr
+-- MAGIC (
+-- MAGIC mandant string,
+-- MAGIC objectclas string,
+-- MAGIC objectid string,
+-- MAGIC changenr string,
+-- MAGIC username string,
+-- MAGIC udate string,
+-- MAGIC utime string,
+-- MAGIC tcode string,
+-- MAGIC planchngnr string,
+-- MAGIC act_chngno string,
+-- MAGIC was_plannd string,
+-- MAGIC change_ind string,
+-- MAGIC langu string,
+-- MAGIC version string,
+-- MAGIC _dataaging string,
+-- MAGIC create_at timestamp ,
+-- MAGIC origin_file string ,
+-- MAGIC year_month_day string 
+-- MAGIC )
+-- MAGIC using delta
+-- MAGIC partitioned by (year_month_day)
+-- MAGIC LOCATION '/mnt/data_s4/bronze/cdhdr'

@@ -1,0 +1,32 @@
+-- Databricks notebook source
+-- MAGIC %sql
+-- MAGIC drop table if exists silver.materiales_organizacion_venta ;
+-- MAGIC create table silver.materiales_organizacion_venta
+-- MAGIC ( 
+-- MAGIC cod_material string COMMENT "Código del material" ,
+-- MAGIC cod_tipo_material string COMMENT "Código del tipo de material en nomenclatura S4" ,
+-- MAGIC cod_organizacion_venta string COMMENT "Código de organización de venta" ,
+-- MAGIC cod_canal_comercial string COMMENT "Código del canal comercial (nacional, exportación, cross)" ,
+-- MAGIC cod_sociedad string COMMENT "Código de la empresa del grupo Alicorp" ,
+-- MAGIC cod_moneda string COMMENT "Código de moneda de la organización de venta" ,
+-- MAGIC cod_bloqueo_comercial string COMMENT "Código de bloqueo a nivel comercial" ,
+-- MAGIC des_bloqueo_comercial string COMMENT "Descripción del bloqueo a nivel comercial" ,
+-- MAGIC cod_unidad_base string COMMENT "Código de la unidad base del material" ,
+-- MAGIC cod_unidad_comercial string COMMENT "Código de la unidad comercial del material en la organización de venta" ,
+-- MAGIC cod_grupo_imputacion string COMMENT "Código de grupo de imputación" ,
+-- MAGIC des_grupo_imputacion string COMMENT "Descripción del grupo de imputación" ,
+-- MAGIC cod_negocio string COMMENT "Código del negocio (Grupo de Materiales 1)" ,
+-- MAGIC des_negocio string COMMENT "Descripción del negocio (Grupo de Materiales 1)" ,
+-- MAGIC cod_subnegocio string COMMENT "Código del subnegocio (Grupo de Materiales 2) " ,
+-- MAGIC des_subnegocio string COMMENT "Descripción del negocio (Grupo de Materiales 1) " ,
+-- MAGIC cod_marca string COMMENT "Código de la marca (Grupo de Materiales 4) " ,
+-- MAGIC des_marca string COMMENT "Descripción de la marca (Grupo de Materiales 4) " ,
+-- MAGIC cod_pais string COMMENT "Código de país de la organización de venta " ,
+-- MAGIC cod_indicador_impuestos int COMMENT "Código de indicador de impuestos " ,
+-- MAGIC des_indicador_impuestos string COMMENT "Descripción de indicador de impuestos " ,
+-- MAGIC fecha_carga timestamp COMMENT "Fecha y hora de carga de la tabla "
+-- MAGIC 
+-- MAGIC )
+-- MAGIC using delta
+-- MAGIC --partitioned by (year_month)
+-- MAGIC LOCATION '/mnt/data_entities/silver/materiales_organizacion_venta'
