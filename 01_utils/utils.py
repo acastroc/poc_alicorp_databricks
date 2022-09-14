@@ -16,7 +16,7 @@ from pyspark.sql import SQLContext
 
 sqlContext = SQLContext(spark.sparkContext)
 
-def create_table (save_path:str,table_name:str):
+def create_table (save_path:str,table_name:str,t_partition:str,parameter):
     """ 
     Definición :  
         Creacion de tabla de forma automatica
@@ -26,10 +26,18 @@ def create_table (save_path:str,table_name:str):
     Resultado:
         
     """
+    partition = ''
     
+    if t_partition == 'd':
+        partition = 'year_month_day'
+    else:
+        partition = 'year_month'
+        
+    metadata = get_columns_to_create_Table(parameter)
+        
     spark.sql(f" drop table if exists {table_name}")
     # spark.sql("CREATE TABLE " + table_name + " USING DELTA LOCATION '" + save_path + "'")
-    spark.sql(f" create table {table_name}  using delta location '{save_path}'" )
+    spark.sql(f" create table {table_name} {metadata} using delta partitioned by ({partition}) location '{save_path}'" )
 
 ######## funcion max_file_storage
 def existe_table (dataBase:str,table:str)-> bool:
@@ -170,7 +178,6 @@ def get_columnsToSelect(sourceTable:str)->List:
     Resultado:
         Lista de campos
     """
-    listCols = ''
     listColsDelta = spark.sql("select * from " + sourceTable + " limit 1").schema.names
     columnsToSelect = ','.join(listColsDelta)
     
@@ -381,6 +388,91 @@ def save_df_schedule (parameter:json) ->str:
         proceso = 'sin registrar'
   
     return proceso
+ 
+
+
+def get_partition(table, part, cnt):
+        """ 
+    Definición :  
+        Metodo que retonar el maximo valor del archivo que se encuentra en el storage
+    Parámetros:
+        str1 (str): ruta donde buscara la maxima fecha
+    Resultado:
+        dict : diccionario con nombre,fecha en date y string
+    """
+        
+    try:
+        df = spark.sql(f"show partitions {table}")
+        partition = df.select(part).distinct().collect()
+        partition = [r[part] for r in partition]
+        partition.sort()
+        partition = partition[cnt]
+        return partition
+    except Exception as x:
+        return 0
+    
+    
+def get_columns_to_create_Table(parameter:json) ->str:
+    """ 
+    Definición :  
+        Metodo que retonar el maximo valor del archivo que se encuentra en el storage
+    Parámetros:
+        str1 (str): ruta donde buscara la maxima fecha
+    Resultado:
+        dict : diccionario con nombre,fecha en date y string
+    """
+    
+    now = datetime.now()
+    date_current = now - timedelta(hours=5)
+    day = '{:02d}'.format(date_current.day)
+    
+    # valor inicial de busqueda
+    file_type = 'csv'
+    infer_schema = 'false'
+    first_row_is_header = 'true'
+    delimiter = ','
+    v_current = date_process('yyyymmddhhmmss')
+    
+    
+    file_location_csv = parameter['file_location_csv']
+    
+    name_file = parameter['name_file']
+    partition = parameter['t_partition']
+    path_delta = parameter['t_location_delta']
+    t_format = parameter['t_format']
+    list_day = parameter['t_day']
+                        
+    
+    df = spark.read.format(file_type) \
+        .option("inferSchema", infer_schema) \
+        .option("multiline", "true") \
+        .option("encoding", "utf8") \
+        .option("header", first_row_is_header) \
+        .option("sep", delimiter) \
+        .load(file_location_csv)
+
+    df = df \
+        .withColumn('CREATE_AT', f.unix_timestamp(f.lit(v_current), 'yyyy-MM-dd HH:mm:ss').cast("timestamp")) \
+        .withColumn('ORIGIN_FILE', f.lit(name_file))
+    
+    if partition == 'm':
+        df = df.withColumn('YEAR_MONTH', f.lit(name_file[0:6]))
+    else:
+        df = df.withColumn('YEAR_MONTH_DAY', f.lit(name_file[0:8]))
+       
+    for each in df.columns:
+        df = df.withColumnRenamed(each , each.strip())
+        
+    list = []
+    listColsDelta = ''
+    for col in df.dtypes:
+        listColsDelta = col[0]+" "+col[1]
+        list.append(listColsDelta)
+    
+    columnsToSelect = "("+','.join(list)+")"
+    
+    return columnsToSelect
+        
 
 print("****** Version Git *********")
 

@@ -49,18 +49,24 @@ for table_landing in list_table :
                      't_format':t_format,
                      't_day':t_day
         }
-        #se graba el df en formato delta en el storage
-        #logger.info(f'{parameter}')
-        process= save_df_schedule(parameter)
-        logger.info(f'{process}')
+#         #se graba el df en formato delta en el storage
+#         #logger.info(f'{parameter}')
+#         process= save_df_schedule(parameter)
+#         logger.info(f'{process}')
         
         #Validamos si existe la tabla creada en databricks
         exis_table = existe_table('landing',t_table)
         
         if exis_table == False :
-            create_table(t_location_delta,f'{t_capa}.{t_table}')
+            create_table(t_location_delta,f'{t_capa}.{t_table}',t_partition,parameter)
             logger.info(f'Creacion de tabla : {t_table}')
+            
+        #se graba el df en formato delta en el storage
+        #logger.info(f'{parameter}')
+        process= save_df_schedule(parameter)
+        logger.info(f'{process}')
     
     except Exception as e:
         #Email("la capa Bronze de Customers_Hierarchy", str(e))
         logger.info(f'Error : {t_table}')
+        logger.info(str(e))

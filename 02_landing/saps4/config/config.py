@@ -6,8 +6,8 @@ json_file = '''
                     "partition_field": "D"
                    },
           "reprocess": {
-                     "active":"N",
-                     "days":"0"
+                     "active":"S",
+                     "days":"5"
                      },
          "schedule": {
                      "format":"daily",
