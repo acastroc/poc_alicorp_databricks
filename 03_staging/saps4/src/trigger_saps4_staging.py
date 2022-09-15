@@ -9,7 +9,7 @@
 
 # Se obtiene la lista de tablas que se procesaran de raw to landing
 list_table=conf_json_order()
-logger = init_logging("Landing")
+logger = init_logging("staging")
 
 mount='/mnt/data_s4'
 raw='raw'
@@ -24,103 +24,61 @@ for table_landing in list_table :
     t_table= table_landing['table']['name'].lower()
     t_partition= table_landing['table']['partition_field'].lower()
     
+    t_primary_key =table_landing['primary_key']
+    t_location_delta = f'{mount}/{t_capa}/{t_table}'
+        
+    if t_partition == 'd':
+        partition = 'year_month_day'
+    else:
+        partition = 'year_month'
+        
     logger.info(f'Procesando tabla: {t_table} - partición : {t_partition}')
     
-    #obtiene el schedule
-    t_format= table_landing['schedule']['format'].lower()
-    t_day= table_landing['schedule']['day']
-    
-    #se define la ruta de carpeta raw
-    t_location = f'{mount}/{raw}/{t_table}/data/{v_year}/'
-    print(t_location)
-    #se define la ruta de la tabla delta
-    t_location_delta = f'{mount}/{t_capa}/{t_table}'
-    print(t_location_delta)
-    
-    max_file=max_file_storage(t_location)
-    print(max_file)
-    name_file = max_file.get("name")
-    print(name_file)
-    
-    
     # Omitir columnas para select
-    noCols = ['create_at','year_month_day','origin_file']
+    noCols = ['create_at',partition,'origin_file']
     # noCols = ['create_at']
     
-    bronze ='landing'
-    bronze_table_name ='kna1'
-    source_bronze= f'{bronze}.{bronze_table_name}'
+    source_landing= f'landing.{t_table}'
     # Obtener columnas para Bronze y Silver
-    columns = getColumnsToSelect(source_bronze)
-    print(columns)
+    columns = get_columns_to_select(source_landing)
     
-    #bronze query
-    partition1 = get_partition(source_bronze,'year_month_day',-1)
-    print("partition1 :", partition1)
-    #bronze query
-    latest_query = f"""
-    select {columns}
-    from {source_bronze} 
-    where year_month_day = {partition1}
-    """ 
+    df_origin = read_df_max_landing(partition,source_landing,columns)
+     
+    df = df_origin.drop(*noCols)
+    df = df.dropDuplicates()
     
-    latets_bronze = spark.sql(latest_query)
-    latets_bronze = latets_bronze.drop(*noCols)
-    latets_bronze = latets_bronze.dropDuplicates()
-    print ('latets_bronze :' +str(latets_bronze.count()))
+    #logger.info('latets_landing :' +str(df.count()))
+
+    exis_table = existe_table(f'{t_capa}',t_table)
+    #logger.info(f'existe Tabla : {exis_table}')
     
+    if exis_table == False :
+            create_table(t_location_delta,f'{t_capa}.{t_table}',t_partition,df_origin)
+            logger.info(f'creacion de tabla : {t_table}')
     
-    #bronze query anterior
-    partition2 = get_partition(source_bronze,'year_month_day',-2)
-    print("partition2 :", partition2)
-    #bronze query
-    latest_query2 = f"""
-    select {columns}
-    from {source_bronze} 
-    where year_month_day = {partition2}
-    """ 
+    else :
+        #logger.info(f'merge tabla: {t_table}')
+        #logger.info(f'primary_key: {t_primary_key}')
+        
+        condition =''
+        primary_key =''
+        for field in t_primary_key :
+            condition = f'{t_table}.{field} = {t_table}.{field}'
+            primary_key += condition+' and '
 
-    latets_bronze2 = spark.sql(latest_query2)
-    latets_bronze2 = latets_bronze2.drop(*noCols)
-    latets_bronze2 = latets_bronze2.dropDuplicates()
-    print ('latets_bronze2 :' +str(latets_bronze2.count()))
+        primary_key = primary_key[:-4]
+        
+        latest_query = f"""
+        merge into {t_capa}.{t_table}
+        using ( select {columns} from {source_landing}
+                ) sqlconsult on {primary_key}
+        when matchef then
+        update set
+            """ 
+        logger.info(latest_query)
+            #logger.info(latest_query)
 
-    #delta
-    delta=latets_bronze.exceptAll(latets_bronze2)
-    
-    #metodo : transfor_basic --> tranformacion basica 
-    delta=transfor_basic(delta,'basic','')
-
-    #metodo : transfor_basic --> tipo de dato decimal 
-    #list_decimal=['prec_plan','prec_real','cost_plan','cost_real']
-    #delta=transfor_basic(delta,'decimal',list_decimal)
-
-    #metodo : transfor_basic --> tipo de dato integer 
-    #list_integer=['sku']
-    #delta=transfor_basic(delta,'integer',list_integer)
-
-
-    if delta .count() > 0:
-        print ('delta :' +str(delta.count()))
-        condition = f"year_month_day='{name_file[0:8]}'"
-        delta = delta\
-        .withColumn('create_at', f.unix_timestamp(f.lit(v_current),'yyyy-MM-dd HH:mm:ss').cast("timestamp")) \
-        .withColumn('year_month_day', f.lit(name_file[0:8])) \
-        .withColumn('origin_file', f.lit(name_file))  #name_file
-        #delta.write.mode('overwrite').format('delta').option("replaceWhere", condition).saveAsTable(source_silver)  
-        print('execution ok')
-    
-
-
-# COMMAND ----------
-
-display(delta)
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC select * from  landing.kna1
+        #df = spark.sql(latest_query)
 
 # COMMAND ----------
 
