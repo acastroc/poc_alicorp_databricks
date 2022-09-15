@@ -16,7 +16,32 @@ from pyspark.sql import SQLContext
 
 sqlContext = SQLContext(spark.sparkContext)
 
-def create_table (save_path:str,table_name:str,t_partition:str,parameter):
+def read_df_max_landing (partition:str,source_landing:str,columns:str) ->DataFrame:
+    
+    latest_query = f"""
+    with
+    filter_tables as ( 
+      select 
+       max({partition}) as particion , max(CREATE_AT) as CREATE_AT
+      from landing.KNA1 
+      where {partition} in (select max({partition}) from {source_landing} )
+    ),
+    table_landing(
+    select * from {source_landing}
+    where {partition} = (select particion from filter_tables)
+    and CREATE_AT >= (select CREATE_AT from filter_tables)
+    )
+    select {columns} from table_landing
+    """ 
+    
+    #logger.info(latest_query)
+    
+    df = spark.sql(latest_query)
+    
+    
+    return df 
+
+def create_table (save_path:str,table_name:str,t_partition:str,df:DataFrame):
     """ 
     Definición :  
         Creacion de tabla de forma automatica
@@ -33,7 +58,15 @@ def create_table (save_path:str,table_name:str,t_partition:str,parameter):
     else:
         partition = 'year_month'
         
-    metadata = get_columns_to_create_Table(parameter)
+       
+    list = []
+    listColsDelta = ''
+    for col in df.dtypes:
+        listColsDelta = col[0]+" "+col[1]
+        list.append(listColsDelta)
+    
+    metadata = "("+','.join(list)+")"
+    
         
     spark.sql(f" drop table if exists {table_name}")
     # spark.sql("CREATE TABLE " + table_name + " USING DELTA LOCATION '" + save_path + "'")
@@ -167,9 +200,9 @@ def transfor_basic (df:DataFrame,typeTrans:str,listVal:List)->DataFrame:
 
     return df
 
-  
+ 
     
-def get_columnsToSelect(sourceTable:str)->List:
+def get_columns_to_select(sourceTable:str)->List:
     """
     Definición :  
         Devuelve los select necesarios en cada capa para la tranformacion
@@ -321,7 +354,7 @@ def read_yaml(bucket:str,file:str)-> yml:
     return downloaded_yaml_file 
      
 ######## funcion save datos delta
-def save_df_schedule (parameter:json) ->str:
+def save_df_schedule (parameter:json,logger)->str:
     """ 
     Definición :  
         Metodo que retonar el maximo valor del archivo que se encuentra en el storage
@@ -365,34 +398,32 @@ def save_df_schedule (parameter:json) ->str:
         .withColumn('ORIGIN_FILE', f.lit(name_file))
     
     if partition == 'm':
-        df = df.withColumn('YEAR_MONTH', f.lit(name_file[0:6]))
+        df = df.withColumn('year_month', f.lit(name_file[0:6]))
     else:
-        df = df.withColumn('YEAR_MONTH_DAY', f.lit(name_file[0:8]))
+        df = df.withColumn('year_month_day', f.lit(name_file[0:8]))
        
     for each in df.columns:
         df = df.withColumnRenamed(each , each.strip())
         
     if (t_format == 'month' ):
-        proceso='tabla mensual sin procesar'
+        logger.info('tabla mensual sin procesar')
         if day in list_day :
-                proceso = 'tabla mensual con fecha de carga'
-                #print(t_day)
-                df.write.mode('append').format('delta').save(path_delta)
+                df.write.mode('append').format('delta').partitionBy("year_month").save(path_delta)
+                logger.info('tabla mensual con fecha de carga')
     elif (t_format == 'daily')  :
-        proceso = 'tabla diaria'
-        df.write.mode('append').format('delta').save(path_delta)
+        df.write.mode('append').format('delta').partitionBy("year_month_day").save(path_delta)
+        logger.info('tabla diaria')
     elif (t_format == 'reproces')  :
-        proceso = 'reproceso '
         df.write.mode('append').format('delta').save(path_delta)
+        logger.info('reproceso ')
     else :
-        proceso = 'sin registrar'
+        logger.info('Sin reproceso')
   
-    return proceso
+    return df
  
-
-
-def get_partition(table, part, cnt):
-        """ 
+def get_partition(table:str, part, cnt):
+    
+    """ 
     Definición :  
         Metodo que retonar el maximo valor del archivo que se encuentra en el storage
     Parámetros:
@@ -400,7 +431,7 @@ def get_partition(table, part, cnt):
     Resultado:
         dict : diccionario con nombre,fecha en date y string
     """
-        
+    
     try:
         df = spark.sql(f"show partitions {table}")
         partition = df.select(part).distinct().collect()
@@ -411,68 +442,5 @@ def get_partition(table, part, cnt):
     except Exception as x:
         return 0
     
-    
-def get_columns_to_create_Table(parameter:json) ->str:
-    """ 
-    Definición :  
-        Metodo que retonar el maximo valor del archivo que se encuentra en el storage
-    Parámetros:
-        str1 (str): ruta donde buscara la maxima fecha
-    Resultado:
-        dict : diccionario con nombre,fecha en date y string
-    """
-    
-    now = datetime.now()
-    date_current = now - timedelta(hours=5)
-    day = '{:02d}'.format(date_current.day)
-    
-    # valor inicial de busqueda
-    file_type = 'csv'
-    infer_schema = 'false'
-    first_row_is_header = 'true'
-    delimiter = ','
-    v_current = date_process('yyyymmddhhmmss')
-    
-    
-    file_location_csv = parameter['file_location_csv']
-    
-    name_file = parameter['name_file']
-    partition = parameter['t_partition']
-    path_delta = parameter['t_location_delta']
-    t_format = parameter['t_format']
-    list_day = parameter['t_day']
-                        
-    
-    df = spark.read.format(file_type) \
-        .option("inferSchema", infer_schema) \
-        .option("multiline", "true") \
-        .option("encoding", "utf8") \
-        .option("header", first_row_is_header) \
-        .option("sep", delimiter) \
-        .load(file_location_csv)
-
-    df = df \
-        .withColumn('CREATE_AT', f.unix_timestamp(f.lit(v_current), 'yyyy-MM-dd HH:mm:ss').cast("timestamp")) \
-        .withColumn('ORIGIN_FILE', f.lit(name_file))
-    
-    if partition == 'm':
-        df = df.withColumn('YEAR_MONTH', f.lit(name_file[0:6]))
-    else:
-        df = df.withColumn('YEAR_MONTH_DAY', f.lit(name_file[0:8]))
-       
-    for each in df.columns:
-        df = df.withColumnRenamed(each , each.strip())
-        
-    list = []
-    listColsDelta = ''
-    for col in df.dtypes:
-        listColsDelta = col[0]+" "+col[1]
-        list.append(listColsDelta)
-    
-    columnsToSelect = "("+','.join(list)+")"
-    
-    return columnsToSelect
-        
-
 print("****** Version Git *********")
 
