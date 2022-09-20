@@ -76,7 +76,6 @@ for table_landing in list_table :
         #######################
         
         lista_columns_update=columns.split(",")
-
         update_merge=''
         list_update_merge =''
         
@@ -123,7 +122,7 @@ for table_landing in list_table :
         values ({list_insert_merge})
         """ 
         #logger.info(latest_query)
-        #logger.info(latest_query)
+        logger.info(latest_query)
         spark.sql(latest_query)
 
 # COMMAND ----------
