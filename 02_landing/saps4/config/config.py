@@ -19,7 +19,7 @@ json_file = '''
                     "partition_field": "M"
                    },
           "reprocess": {
-                     "active":"S",
+                     "active":"N",
                      "days":"2"
                      },
          "schedule": {
@@ -32,7 +32,7 @@ json_file = '''
                     "partition_field": "M"
                    },
           "reprocess": {
-                     "active":"S",
+                     "active":"N",
                      "days":"5"
                      },
          "schedule": {

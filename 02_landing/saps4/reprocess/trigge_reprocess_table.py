@@ -64,9 +64,11 @@ for table_landing in list_table :
                 
                 #logger.info(f'{parameter}')
                 #se graba el df en formato delta en el storage
-                process= save_df_schedule(parameter)
+                process= save_df_schedule(parameter,logger)
                 #logger.info(f'{process}')
         
             except Exception as e:
                 #Email("la capa Bronze de Customers_Hierarchy", str(e))
-                logger.info(f'Error : {t_table}')    
+                logger.info(f'Error : {t_table}')  
+                logger.info(f'Error : {e}')
+

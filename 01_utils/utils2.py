@@ -16,13 +16,7 @@ from pyspark.sql import SQLContext
 
 sqlContext = SQLContext(spark.sparkContext)
 
-def read_df_max_landing (partition:str,source_landing:str,columns:str,fil=None) ->DataFrame:
-    
-    condition = ''
-    
-    if(fil):
-        condition = f'where {partition} = {fil}'
-    
+def read_df_max_landing (partition:str,source_landing:str,columns:str) ->DataFrame:
     
     latest_query = f"""
     with
@@ -30,7 +24,7 @@ def read_df_max_landing (partition:str,source_landing:str,columns:str,fil=None) 
       select 
        max({partition}) as particion , max(CREATE_AT) as CREATE_AT
       from {source_landing} 
-      where {partition} in (select max({partition}) from {source_landing} {condition})
+      where {partition} in (select max({partition}) from {source_landing} )
     ),
     table_landing(
     select * from {source_landing}
@@ -40,7 +34,7 @@ def read_df_max_landing (partition:str,source_landing:str,columns:str,fil=None) 
     select {columns} from table_landing
     """ 
     
-    logger.info(latest_query)
+    #logger.info(latest_query)
     
     df = spark.sql(latest_query)
     
@@ -427,28 +421,7 @@ def save_df_schedule (parameter:json,logger)->str:
   
     return df
  
-# def get_partition(table:str, part, cnt):
-    
-#     """ 
-#     Definición :  
-#         Metodo que retonar el maximo valor del archivo que se encuentra en el storage
-#     Parámetros:
-#         str1 (str): ruta donde buscara la maxima fecha
-#     Resultado:
-#         dict : diccionario con nombre,fecha en date y string
-#     """
-    
-#     try:
-#         df = spark.sql(f"show partitions {table}")
-#         partition = df.select(part).distinct().collect()
-#         partition = [r[part] for r in partition]
-#         partition.sort()
-#         partition = partition[cnt]
-#         return partition
-#     except Exception as x:
-#         return 0
-    
-def get_partition(table:str, part, cnt:int):
+def get_partition(table:str, part, cnt):
     
     """ 
     Definición :  
@@ -461,18 +434,14 @@ def get_partition(table:str, part, cnt:int):
     
     try:
         df = spark.sql(f"show partitions {table}")
-        lst = []
         partition = df.select(part).distinct().collect()
         partition = [r[part] for r in partition]
-        partition.sort(reverse=True)
-        for n in range(cnt):
-            lst.append(partition[n])
-
-        lst.sort(reverse=False)
-        return lst
+        partition.sort()
+        partition = partition[cnt]
+        return partition
     except Exception as x:
-        print(x)
         return 0
+    
     
     
 def merge(exis_table:bool,t_location_delta:str,t_capa:str,t_table:str,t_partition:str,df_origin:DataFrame,t_primary_key:str):
