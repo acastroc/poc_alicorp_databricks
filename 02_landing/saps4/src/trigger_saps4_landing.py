@@ -66,3 +66,20 @@ for table_landing in list_table :
         #Email("la capa Bronze de Customers_Hierarchy", str(e))
         logger.info(f'Error : {t_table}')
         logger.info(str(e))
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC 
+# MAGIC drop table landing.kna1;
+# MAGIC drop table landing.tvfkt;
+# MAGIC drop table landing.knvv;
+# MAGIC drop table landing.vttp;
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC 
+# MAGIC select count(1)
+# MAGIC from landing.kna1;
+# MAGIC --20913
