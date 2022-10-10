@@ -434,7 +434,7 @@ def save_df_schedule (parameter:json,logger)->str:
         logger.info('Sin reproceso')
   
     return df
- 
+
 # def get_partition(table:str, part, cnt):
     
 #     """ 

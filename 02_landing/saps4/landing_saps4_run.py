@@ -1,9 +1,9 @@
 # Databricks notebook source
-# MAGIC %run ../../../01_utils/utils
+# MAGIC %run ../../01_utils/utils
 
 # COMMAND ----------
 
-# MAGIC %run ../config/config
+# MAGIC %run ../saps4/landing_saps4_config
 
 # COMMAND ----------
 
@@ -50,7 +50,7 @@ for table_landing in list_table :
                      't_day':t_day
         }
 #         #se graba el df en formato delta en el storage
-        #logger.info(f'{parameter}')
+        logger.info(f'{parameter}')
         
         df= save_df_schedule(parameter,logger)
         logger.info(f'cantidad de registros : {df.count()}')
@@ -69,17 +69,13 @@ for table_landing in list_table :
 
 # COMMAND ----------
 
+df= save_df_schedule(parameter,logger)
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC 
 # MAGIC drop table landing.kna1;
 # MAGIC drop table landing.tvfkt;
 # MAGIC drop table landing.knvv;
 # MAGIC drop table landing.vttp;
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC select count(1)
-# MAGIC from landing.kna1;
-# MAGIC --20913
