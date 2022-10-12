@@ -403,12 +403,14 @@ def save_df_schedule (parameter:json,logger)->str:
         .withColumn('ORIGIN_FILE', f.lit(name_file))
     
     condition = ''
-    
+    part = ''
     if partition == 'm':
         condition = f"YEAR_MONTH='{name_file[0:6]}'"
+        part = 'year_month'
         df = df.withColumn('year_month', f.lit(name_file[0:6]))
     else:
         condition = f"YEAR_MONTH_DAY='{name_file[0:8]}'"
+        part = 'year_month_day'
         df = df.withColumn('year_month_day', f.lit(name_file[0:8]))
        
     for each in df.columns:
@@ -417,17 +419,15 @@ def save_df_schedule (parameter:json,logger)->str:
     if (t_format == 'month' ):
         logger.info('tabla mensual sin procesar')
         if day in list_day :
-                #condition = f"YEAR_MONTH='{name_file[0:6]}'"
-                df.write.mode('overwrite').format('delta').option("replaceWhere", condition).saveAsTable(path_delta)
+                df.write.mode('overwrite').format('delta').option("replaceWhere", condition).partitionBy(part).save(path_delta)
                 #df.write.mode('append').format('delta').partitionBy("year_month").save(path_delta)
                 logger.info('tabla mensual con fecha de carga')
     elif (t_format == 'daily')  :
-        #condition = f"YEAR_MONTH_DAY='{name_file[0:8]}'"
-        df.write.mode('overwrite').format('delta').option("replaceWhere", condition).saveAsTable(path_delta)
+        df.write.mode('overwrite').format('delta').option("replaceWhere", condition).partitionBy(part).save(path_delta)
         #df.write.mode('append').format('delta').partitionBy("year_month_day").save(path_delta)
         logger.info('tabla diaria')
     elif (t_format == 'reproces')  :
-        df.write.mode('overwrite').format('delta').option("replaceWhere", condition).saveAsTable(path_delta)
+        df.write.mode('overwrite').format('delta').option("replaceWhere", condition).partitionBy(part).save(path_delta)
         #df.write.mode('append').format('delta').save(path_delta)
         logger.info('reproceso ')
     else :
