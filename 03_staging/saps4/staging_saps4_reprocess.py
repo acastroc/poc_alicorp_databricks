@@ -1,9 +1,9 @@
 # Databricks notebook source
-# MAGIC %run ../../../01_utils/utils
+# MAGIC %run ../../01_utils/utils
 
 # COMMAND ----------
 
-# MAGIC %run ../config/config
+# MAGIC %run ../saps4/staging_ saps4_config
 
 # COMMAND ----------
 

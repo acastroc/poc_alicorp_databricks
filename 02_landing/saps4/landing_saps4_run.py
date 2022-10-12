@@ -20,6 +20,7 @@ v_year=date_process('yyyy')
 for table_landing in list_table :   
     #obtiene valores de tabla
     t_table= table_landing['table']['name'].lower()
+    t_delta_table= 'saps4_' + table_landing['table']['name'].lower()
     t_partition= table_landing['table']['partition_field'].lower()
     
     logger.info(f'Procesando tabla: {t_table} - partición : {t_partition}')
@@ -31,9 +32,10 @@ for table_landing in list_table :
     #se define la ruta de carpeta raw
     t_location = f'{mount}/{raw}/{t_table}/data/{v_year}/'
     #se define la ruta de la tabla delta
-    t_location_delta = f'{mount}/{t_capa}/{t_table}'
+    t_location_delta = f'{mount}/{t_capa}/saps4_{t_table}'
     
     try:
+            
         #se obtiene maximo archivo a procesar
         max_file=max_file_storage(t_location)
         name_file = max_file.get("name")
@@ -50,17 +52,17 @@ for table_landing in list_table :
                      't_day':t_day
         }
 #         #se graba el df en formato delta en el storage
-        logger.info(f'{parameter}')
+       #logger.info(f'{parameter}')
         
-        df= save_df_schedule(parameter,logger)
+        df= save_df_schedule(parameter,logger)#
         logger.info(f'cantidad de registros : {df.count()}')
         
         #Validamos si existe la tabla creada en databricks
-        exis_table = existe_table('landing',t_table)
+        exis_table = existe_table('landing',t_delta_table)
         logger.info(f'Existe Tabla : {exis_table}')
         if exis_table == False :
-            create_table(t_location_delta,f'{t_capa}.{t_table}',t_partition,df)
-            logger.info(f'Creacion de tabla : {t_table}')
+            create_table(t_location_delta,f'{t_capa}.{t_delta_table}',t_partition,df)
+            logger.info(f'Creacion de tabla : {t_delta_table}')
             
     except Exception as e:
         #Email("la capa Bronze de Customers_Hierarchy", str(e))
@@ -69,13 +71,9 @@ for table_landing in list_table :
 
 # COMMAND ----------
 
-df= save_df_schedule(parameter,logger)
-
-# COMMAND ----------
-
 # MAGIC %sql
 # MAGIC 
-# MAGIC drop table landing.kna1;
-# MAGIC drop table landing.tvfkt;
-# MAGIC drop table landing.knvv;
-# MAGIC drop table landing.vttp;
+# MAGIC --drop table landing.saps4_kna1;
+# MAGIC --drop table landing.saps4_tvfkt;
+# MAGIC --drop table landing.saps4_knvv;
+# MAGIC --drop table landing.saps4_vttp;
