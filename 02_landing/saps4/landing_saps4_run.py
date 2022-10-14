@@ -68,12 +68,3 @@ for table_landing in list_table :
         #Email("la capa Bronze de Customers_Hierarchy", str(e))
         logger.info(f'Error : {t_table}')
         logger.info(str(e))
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC --drop table landing.saps4_kna1;
-# MAGIC --drop table landing.saps4_tvfkt;
-# MAGIC --drop table landing.saps4_knvv;
-# MAGIC --drop table landing.saps4_vttp;
